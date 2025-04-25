@@ -44,8 +44,7 @@ class MethodChannelAssetDelivery extends AssetDeliveryPlatform {
   @override
   Future<void> fetchAssetPackState(String assetPackName) async {
     try {
-      await methodChannel
-          .invokeMethod('fetchAssetPackState', {'assetPack': assetPackName});
+      await methodChannel.invokeMethod('fetchAssetPackState', {'assetPack': assetPackName});
     } on PlatformException catch (e) {
       debugPrint("Failed to fetch asset pack state: ${e.message}");
     }
@@ -74,8 +73,7 @@ class MethodChannelAssetDelivery extends AssetDeliveryPlatform {
   /// - [UnsupportedError] if the platform is unsupported.
   @override
   Future<String?> getAssetPackPath({
-    required String
-        assetPackName, // specify the name of the asset pack to fetch
+    required String assetPackName, // specify the name of the asset pack to fetch
     required int count, // specify the number of assets in the pack to fetch
     required String namingPattern, // specify the naming pattern of the assets
     required String fileExtension, // Specify the file extension for the asset
@@ -83,8 +81,7 @@ class MethodChannelAssetDelivery extends AssetDeliveryPlatform {
     String? assetPath;
     try {
       if (Platform.isAndroid) {
-        assetPath = await methodChannel
-            .invokeMethod('getAssets', {'assetPack': assetPackName});
+        assetPath = await methodChannel.invokeMethod('getAssets', {'assetPack': assetPackName});
       } else if (Platform.isIOS) {
         assetPath = await methodChannel.invokeMethod('getDownloadResources', {
           'tag': assetPackName,
@@ -98,10 +95,10 @@ class MethodChannelAssetDelivery extends AssetDeliveryPlatform {
       }
     } on PlatformException catch (e) {
       debugPrint("Failed to fetch asset pack path: ${e.message}");
-      return null;
+      rethrow;
     } on UnsupportedError catch (e) {
       debugPrint("Error: ${e.message}");
-      return null;
+      rethrow;
     }
     return assetPath;
   }
@@ -125,17 +122,16 @@ class MethodChannelAssetDelivery extends AssetDeliveryPlatform {
     if (Platform.isAndroid) {
       methodChannel.setMethodCallHandler((call) async {
         if (call.method == 'onAssetPackStatusChange') {
-          Map<String, dynamic> statusMap =
-              Map<String, dynamic>.from(call.arguments);
+          Map<String, dynamic> statusMap = Map<String, dynamic>.from(call.arguments);
           onUpdate(statusMap);
         }
       });
     } else if (Platform.isIOS) {
       progressChannel.setMethodCallHandler((call) async {
         if (call.method == 'updateProgress') {
-          print('download progress ${call.arguments}');
+          debugPrint('download progress ${call.arguments}');
           double? progress = call.arguments as double?;
-          print('download progress $progress');
+          debugPrint('download progress $progress');
           onUpdate({'status': 'downloading', 'downloadProgress': progress});
         }
       });
